@@ -24,28 +24,28 @@ public class GfCommunication extends GodotPlugin {
     private final HashMap<String,MethodChannel.Result> resultCache = new HashMap<>();
     private final String pluginName = "gf_plugin";
 
-    private final FlutterFragment ff;
+    private FlutterFragment ff;
 
-    public GfCommunication(Godot godot, FlutterFragment fragment) {
+    public GfCommunication(Godot godot, FlutterFragment frag) {
         super(godot);
-        ff = fragment;
+        ff = frag;
     }
 
     @Nullable
     @Override
     public View onMainCreate(Activity activity) {
-        var fe = ff.getFlutterEngine();
-        if (fe==null){
-            throw new RuntimeException("unable to get flutter engine from flutter fragment");
+        var e = ff.getFlutterEngine();
+        if (e==null){
+            throw new RuntimeException("no flutter engine");
         }
         new MethodChannel(
-                fe.getDartExecutor().getBinaryMessenger(),pluginName
+                e.getDartExecutor().getBinaryMessenger(),pluginName
         ).setMethodCallHandler((call, result) -> {
             try{
                 emitSignal("OnMsg",call.method,call.arguments);
                 resultCache.put(call.method, result);
-            } catch (Exception e){
-                result.error(pluginName+"/emit_signal_failed",e.getMessage(),null);
+            } catch (Exception err){
+                result.error(pluginName+"/emit_signal_failed",err.getMessage(),null);
             }
         });
         return super.onMainCreate(activity);
