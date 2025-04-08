@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -17,20 +18,23 @@ import org.godotengine.godot.GodotLib;
 import org.godotengine.godot.plugin.GodotPlugin;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class MainActivity extends GodotActivity {
     private static final String FLUTTER_TAG = "flutter_fragment";
-    private static final String CHANNEL = "gf";
 
     private FlutterFragment flutterFragment;
 
+    @NonNull
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        hideSystemUI();
+    protected GodotFragment initGodotInstance() {
+        createFlutter();
+        return super.initGodotInstance();
+    }
 
+    private void createFlutter(){
         // Add a container for Flutter
         FrameLayout flutterContainer = new FrameLayout(this);
         flutterContainer.setId(View.generateViewId());
@@ -55,6 +59,12 @@ public class MainActivity extends GodotActivity {
     }
 
     @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        hideSystemUI();
+    }
+
+    @Override
     public List<String> getCommandLine() {
         return Arrays.asList("res://main.tscn");
     }
@@ -73,12 +83,8 @@ public class MainActivity extends GodotActivity {
 
     @Override
     public Set<GodotPlugin> getHostPlugins(Godot engine) {
-        var e = super.getHostPlugins(engine);
-        var fe = flutterFragment.getFlutterEngine();
-        if (fe==null){
-            throw new RuntimeException("unable to find flutter engine");
-        }
-        e.add(new GfCommunication(engine, fe.getDartExecutor().getBinaryMessenger()));
-        return e;
+        Set<GodotPlugin> plugins = new HashSet<>();
+        plugins.add(new GfCommunication(engine, flutterFragment));
+        return plugins;
     }
 }
